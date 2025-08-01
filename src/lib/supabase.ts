@@ -37,8 +37,20 @@ export const supabase = () => {
 
 // For server-side usage (API routes)
 export const createServerSupabaseClient = () => {
-  if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error('Supabase environment variables are not configured');
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  
+  if (!supabaseUrl || !supabaseServiceKey) {
+    console.error('Missing Supabase server environment variables:', {
+      url: !!supabaseUrl,
+      serviceKey: !!supabaseServiceKey
+    });
+    throw new Error('Supabase server environment variables are not configured');
   }
-  return createClient(supabaseUrl, supabaseAnonKey);
+  
+  return createClient(supabaseUrl, supabaseServiceKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  });
 }; 

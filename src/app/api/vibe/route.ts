@@ -322,6 +322,8 @@ When analyzing new data (empty currentConfig):
 - Set appropriate axis title spacing: xTitle nameGap should be 80-100 for good separation from labels, yTitle nameGap should be 60-80
 - Make axis titles bigger (fontSize: 16-18) and white (color: "#ffffff") by default
 - Set grid to "none" by default for cleaner appearance (unless user specifically requests grid lines)
+- For light themes, use a warm cream background (#fdf6e3) by default unless user specifies a different color
+- The chart canvas has rounded corners for a modern appearance
 
 When making tweaks (existing currentConfig):
 - Return only the fields you want to change
@@ -356,6 +358,38 @@ Examples of tweaks:
 - "dark mode" → {"themePreset": "shadcn-dark"}
 - "dark theme" → {"themePreset": "shadcn-dark"}
 - "switch to dark" → {"themePreset": "shadcn-dark"}
+- "cream background" → {"backgroundColor": "#fdf6e3"}
+- "warm background" → {"backgroundColor": "#fef8e7"}
+- "beige background" → {"backgroundColor": "#f5f5dc"}
+- "ivory background" → {"backgroundColor": "#fffff0"}
+- "white background" → {"backgroundColor": "#ffffff"}
+- "light blue background" → {"backgroundColor": "#f0f8ff"}
+- "light gray background" → {"backgroundColor": "#f8f9fa"}
+- "pink background" → {"backgroundColor": "#fff0f5"}
+- "mint background" → {"backgroundColor": "#f0fff0"}
+- "lavender background" → {"backgroundColor": "#f8f4ff"}
+- "peach background" → {"backgroundColor": "#fff5ee"}
+- "yellow background" → {"backgroundColor": "#fffff0"}
+- "orange background" → {"backgroundColor": "#fff8dc"}
+- "red background" → {"backgroundColor": "#fff5f5"}
+- "green background" → {"backgroundColor": "#f0fff0"}
+- "blue background" → {"backgroundColor": "#f0f8ff"}
+- "purple background" → {"backgroundColor": "#f8f4ff"}
+- "background color #ffebee" → {"backgroundColor": "#ffebee"}
+- "background color #e3f2fd" → {"backgroundColor": "#e3f2fd"}
+- "background color #e8f5e8" → {"backgroundColor": "#e8f5e8"}
+- "background color #fff3e0" → {"backgroundColor": "#fff3e0"}
+- "background color #fce4ec" → {"backgroundColor": "#fce4ec"}
+- "background color #f1f8e9" → {"backgroundColor": "#f1f8e9"}
+- "background color #e0f2f1" → {"backgroundColor": "#e0f2f1"}
+- "background color #f3e5f5" → {"backgroundColor": "#f3e5f5"}
+- "background color #fff8e1" → {"backgroundColor": "#fff8e1"}
+- "background color #ffebee" → {"backgroundColor": "#ffebee"}
+- "background color #e8eaf6" → {"backgroundColor": "#e8eaf6"}
+- "background color #e0f7fa" → {"backgroundColor": "#e0f7fa"}
+- "background color #f1f8e9" → {"backgroundColor": "#f1f8e9"}
+- "background color #fff3e0" → {"backgroundColor": "#fff3e0"}
+- "background color #fce4ec" → {"backgroundColor": "#fce4ec"}
 - "thick lines" → {"lineStyle": {"width": 8}}
 - "smooth curves" → {"lineStyle": {"smooth": true}}
 - "add lines back" → {"lineStyle": {"lineOpacity": 1}}
@@ -426,6 +460,14 @@ Examples of tweaks:
 - "short x labels" → {"axisLabels": {"xLabels": {"formatter": "return value.toString().substring(0, 3);"}}}
 - "make x labels more terse" → {"axisLabels": {"xLabels": {"formatter": "return value.toString().substring(0, 3);"}}}
 - "terse x labels" → {"axisLabels": {"xLabels": {"formatter": "return value.toString().substring(0, 3);"}}}
+- "remove first label" → {"axisLabels": {"xLabels": {"formatter": "return params.dataIndex === 0 ? '' : value;"}}}
+- "hide first x label" → {"axisLabels": {"xLabels": {"formatter": "return params.dataIndex === 0 ? '' : value;"}}}
+- "remove first date" → {"axisLabels": {"xLabels": {"formatter": "return params.dataIndex === 0 ? '' : value;"}}}
+- "hide first date" → {"axisLabels": {"xLabels": {"formatter": "return params.dataIndex === 0 ? '' : value;"}}}
+- "remove first x axis label" → {"axisLabels": {"xLabels": {"formatter": "return params.dataIndex === 0 ? '' : value;"}}}
+- "hide first x axis label" → {"axisLabels": {"xLabels": {"formatter": "return params.dataIndex === 0 ? '' : value;"}}}
+- "remove first label on x axis" → {"axisLabels": {"xLabels": {"formatter": "return params.dataIndex === 0 ? '' : value;"}}}
+- "hide first label on x axis" → {"axisLabels": {"xLabels": {"formatter": "return params.dataIndex === 0 ? '' : value;"}}}
 
 Example of correct JSON:
 {

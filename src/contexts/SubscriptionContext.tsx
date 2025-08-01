@@ -10,6 +10,8 @@ interface UserSubscription {
   upload_count: number;
   is_premium: boolean;
   stripe_customer_id?: string;
+  stripe_subscription_id?: string;
+  status?: string;
   created_at: string;
   updated_at: string;
 }

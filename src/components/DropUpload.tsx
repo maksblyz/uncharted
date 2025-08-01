@@ -5,11 +5,15 @@ import useChartStore from "@/store/useChartStore";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { Upload } from "lucide-react";
 
+
 // Function to generate complete chart configuration from data
 async function generateChartFromData(data: Record<string, unknown>[]) {
     try {
         console.log('Starting LLM chart generation...');
         console.log('Data sample:', data.slice(0, 3));
+        
+        // Set generating state to true
+        useChartStore.getState().setGenerating(true);
         
         // Send data to LLM for complete chart generation
         const chartConfig = await generateCompleteChartConfig(data);
@@ -25,6 +29,9 @@ async function generateChartFromData(data: Record<string, unknown>[]) {
         const fallbackConfig = createFallbackConfig(data);
         useChartStore.getState().setConfig(fallbackConfig);
         useChartStore.getState().setChartInitialized(true);
+    } finally {
+        // Set generating state to false
+        useChartStore.getState().setGenerating(false);
     }
 }
 
@@ -272,7 +279,7 @@ function applyAutomaticSpacingFixes(config: any, dataAnalysis: any) {
     config.axisTitles.yTitle.nameGap = 60;
 
     // Ensure legend is shown for categorical data
-    if (dataAnalysis.dataStructure.categoricalColumns.length > 0) {
+    if (dataAnalysis.dataStructure?.categoricalColumns?.length > 0) {
         if (!config.legend) config.legend = {};
         config.legend.show = true;
         config.legend.position = 'bottom'; // Changed from 'top' to 'bottom'
@@ -364,18 +371,20 @@ function createFallbackConfig(data: Record<string, unknown>[]) {
 }
 
 export default function DropUpload() {
-    const { setCsvData, setConfig, csvData, chartInitialized } = useChartStore();
+    const { setCsvData, csvData, chartInitialized } = useChartStore();
     const { checkUploadLimit, incrementUploadCount } = useSubscription();
 
-    // If data is loaded but chart not initialized, show a different message
+    // If data is loaded but chart not initialized, show generating state
     if (csvData && csvData.length > 0 && !chartInitialized) {
         return (
             <div className="absolute inset-0 flex flex-col items-center justify-center rounded-3xl">
-                <div className="text-white text-lg mb-4">
-                    Data loaded successfully!
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
+                <div className="text-white text-lg mb-2">
+                    Generating
+                    <span className="animate-pulse">...</span>
                 </div>
                 <div className="text-gray-400 text-base">
-                    Write a prompt below to generate your chart
+                    Creating your chart with AI
                 </div>
             </div>
         );

@@ -24,14 +24,42 @@ export async function POST(request: NextRequest) {
   try {
     switch (event.type) {
       case 'checkout.session.completed': {
-        const session = event.data.object as { metadata: Record<string, string> | null };
+        const session = event.data.object as { 
+          metadata: Record<string, string> | null;
+          subscription?: string;
+          customer?: string;
+        };
         const userId = session.metadata?.userId;
+        const subscriptionId = session.subscription;
+        const customerId = session.customer;
+
+        console.log('Processing checkout.session.completed:', {
+          userId,
+          subscriptionId,
+          customerId
+        });
+
+        if (!userId) {
+          console.error('No userId found in session metadata');
+          break;
+        }
 
         // Update user subscription to premium
-        await createServerSupabaseClient()
+        const { error: updateError } = await createServerSupabaseClient()
           .from('user_subscriptions')
-          .update({ is_premium: true })
+          .update({ 
+            is_premium: true,
+            stripe_subscription_id: subscriptionId,
+            stripe_customer_id: customerId,
+            status: 'active'
+          })
           .eq('user_id', userId);
+
+        if (updateError) {
+          console.error('Error updating subscription:', updateError);
+        } else {
+          console.log('Successfully updated subscription for user:', userId);
+        }
 
         break;
       }

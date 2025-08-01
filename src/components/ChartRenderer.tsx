@@ -16,6 +16,11 @@ import useChartStore from "@/store/useChartStore";
 import { VibeConfig } from "@/lib/vibe-config";
 import shadcnDark from "@/theme/shadcnDark";
 
+interface EChartsParams {
+  dataIndex: number;
+  [key: string]: unknown;
+}
+
 // Register all necessary ECharts components and charts
 echarts.use([
   TitleComponent,
@@ -36,7 +41,7 @@ echarts.registerTheme("shadcn-dark", shadcnDark);
 /**
  * Bins data by grouping rows and aggregating them.
  */
-function binData(
+export function binData(
   data: Record<string, unknown>[],
   xKey: string,
   yKey: string,
@@ -105,7 +110,7 @@ function createSeries(config: VibeConfig, category?: string) {
         },
         ...(barStyle?.colors && {
           itemStyle: {
-            color: (params: any) => {
+            color: (params: EChartsParams) => {
               const colors = barStyle.colors!;
               return colors[params.dataIndex % colors.length];
             },
@@ -117,7 +122,7 @@ function createSeries(config: VibeConfig, category?: string) {
         }),
         ...(barStyle?.gradient && {
           itemStyle: {
-            color: (params: any) => {
+            color: (params: EChartsParams) => {
               const baseColor = barStyle?.colors ? 
                 barStyle.colors[params.dataIndex % barStyle.colors.length] : 
                 color;
@@ -175,7 +180,7 @@ function createSeries(config: VibeConfig, category?: string) {
 /**
  * Builds the final ECharts option object from the configuration.
  */
-function buildEchartsOption(data: Record<string, unknown>[], c: VibeConfig): echarts.EChartsCoreOption {
+export function buildEchartsOption(data: Record<string, unknown>[], c: VibeConfig): echarts.EChartsCoreOption {
   if (!data.length || !c.xKey || !c.yKey) return {};
 
   // Filter out any rows with empty or null values for the selected keys
@@ -214,14 +219,14 @@ function buildEchartsOption(data: Record<string, unknown>[], c: VibeConfig): ech
           borderRadius: 10, 
           borderColor: "#1a1a1a", 
           borderWidth: 2,
-          color: c.pieStyle?.gradient ? (params: any) => {
+          color: c.pieStyle?.gradient ? (params: EChartsParams) => {
             const colors = c.palette || ['#7dd3fc', '#60a5fa', '#818cf8', '#c084fc', '#f472b6'];
             const baseColor = colors[params.dataIndex % colors.length];
             return new echarts.graphic.RadialGradient(0.5, 0.5, 1, [
               { offset: 0, color: baseColor },
               { offset: 1, color: echarts.color.modifyAlpha(baseColor, 0.3) }
             ]);
-          } : (params: any) => {
+          } : (params: EChartsParams) => {
             const colors = c.palette || ['#7dd3fc', '#60a5fa', '#818cf8', '#c084fc', '#f472b6'];
             return colors[params.dataIndex % colors.length];
           }
@@ -245,7 +250,7 @@ function buildEchartsOption(data: Record<string, unknown>[], c: VibeConfig): ech
 
   return {
     theme,
-    backgroundColor: c.themePreset === 'light' ? '#f8fafc' : 'transparent',
+    backgroundColor: c.backgroundColor || (c.themePreset === 'light' ? '#fdf6e3' : 'transparent'),
     textStyle: { 
       fontFamily: c.font?.family ?? "system-ui", 
       fontWeight: c.font?.weight ?? 400,
@@ -316,11 +321,16 @@ function buildEchartsOption(data: Record<string, unknown>[], c: VibeConfig): ech
       axisLabel: {
         rotate: c.axisLabels?.xLabels?.rotate ?? 'auto',
         interval: c.axisLabels?.xLabels?.interval ?? 'auto',
+        showMaxLabel: c.axisLabels?.xLabels?.showMaxLabel ?? true,
         color: c.axisLabels?.xLabels?.color || (c.themePreset === 'light' ? '#64748b' : '#94a3b8'),
         fontSize: 12,
-        formatter: c.axisLabels?.xLabels?.formatter ? (value: any) => {
+        formatter: c.axisLabels?.xLabels?.formatter ? (value: string, index: number) => {
           try {
-            return new Function('value', c.axisLabels?.xLabels?.formatter!)(value);
+            const formatter = c.axisLabels?.xLabels?.formatter;
+            if (formatter) {
+              return new Function('value', 'params', formatter)(value, { dataIndex: index });
+            }
+            return value;
           } catch (e) {
             console.warn('Formatter error:', e);
             return value;
@@ -352,9 +362,13 @@ function buildEchartsOption(data: Record<string, unknown>[], c: VibeConfig): ech
       axisLabel: { 
         color: c.axisLabels?.yLabels?.color || (c.themePreset === 'light' ? '#64748b' : '#94a4b8'), 
         fontSize: 12,
-        formatter: c.axisLabels?.yLabels?.formatter ? (value: any) => {
+        formatter: c.axisLabels?.yLabels?.formatter ? (value: string) => {
           try {
-            return new Function('value', c.axisLabels?.yLabels?.formatter!)(value);
+            const formatter = c.axisLabels?.yLabels?.formatter;
+            if (formatter) {
+              return new Function('value', formatter)(value);
+            }
+            return value;
           } catch (e) {
             console.warn('Formatter error:', e);
             return value;
@@ -393,19 +407,12 @@ export default function ChartRenderer() {
     );
   }
 
-  const aspectRatio = config.chartSize?.aspectRatio ?? 1.8;
-  const maxHeight = 600; // Set a reasonable max height
-  const minHeight = 400; // Ensure minimum height for all elements
   const maxWidth = 800; // Set a reasonable max width
-  
-  // Adjust grid margins based on aspect ratio to prevent cutoff
-  const isNarrow = aspectRatio < 1.0;
-  const isWide = aspectRatio > 2.0;
 
   return (
     <div className="flex w-full justify-center p-4 h-full">
       <div
-        className="overflow-hidden w-full h-full"
+        className="overflow-hidden w-full h-full rounded-lg"
         style={{
           width: '100%',
           height: '100%',
@@ -419,6 +426,7 @@ export default function ChartRenderer() {
           theme="shadcn-dark"
           notMerge={true}
           lazyUpdate={true}
+          data-echarts-instance="true"
         />
       </div>
     </div>

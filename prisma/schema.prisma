@@ -1,0 +1,58 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Chart {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  config      Json     // VibeConfig as JSON
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  isActive    Boolean  @default(true)
+  
+  // Relations
+  chartData   ChartData[]
+  sessions    UserSession[]
+  
+  @@map("charts")
+}
+
+model ChartData {
+  id        String   @id @default(cuid())
+  chartId   String
+  data      Json     // CSV data as JSON array
+  createdAt DateTime @default(now())
+  
+  // Relations
+  chart     Chart    @relation(fields: [chartId], references: [id], onDelete: Cascade)
+  
+  @@map("chart_data")
+}
+
+model UserSession {
+  id           String   @id @default(cuid())
+  sessionId    String   @unique // Browser session ID
+  chartId      String?
+  currentState Json?    // Current chart state (config + data)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  lastActive   DateTime @default(now())
+  
+  // Relations
+  chart        Chart?   @relation(fields: [chartId], references: [id], onDelete: SetNull)
+  
+  @@map("user_sessions")
+}

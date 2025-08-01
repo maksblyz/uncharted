@@ -5,9 +5,19 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function LandingPage() {
   const { user, signOut, loading } = useAuth();
+  const router = useRouter();
+
+  // Redirect authenticated users to upload page
+  useEffect(() => {
+    if (user && !loading) {
+      router.push('/upload');
+    }
+  }, [user, loading, router]);
 
   if (loading) {
     return (

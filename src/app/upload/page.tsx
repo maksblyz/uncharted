@@ -8,11 +8,17 @@ import UpgradePrompt from "@/components/premium/UpgradePrompt";
 import useChartStore from "@/store/useChartStore";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { Button } from "@/components/ui/button";
-import { Undo2, Bookmark } from "lucide-react";
+import { Undo2, Plus } from "lucide-react";
+import { useEffect } from "react";
 
 export default function UploadPage() {
-  const { csvData, chartInitialized, canUndo, undo, saveChart } = useChartStore();
+  const { csvData, chartInitialized, canUndo, undo, loadChart, isLoading, resetChart } = useChartStore();
   const { isPremium, checkUploadLimit, loading: subLoading, uploadCount, subscription } = useSubscription();
+
+  // Load chart on page load
+  useEffect(() => {
+    loadChart();
+  }, [loadChart]);
 
   // Debug logging
   console.log('Upload page state:', {
@@ -24,8 +30,8 @@ export default function UploadPage() {
     subscriptionData: subscription
   });
 
-  // Show loading spinner while subscription data is loading
-  if (subLoading) {
+  // Show loading spinner while subscription data is loading or chart is loading
+  if (subLoading || isLoading) {
     return (
       <div className="h-screen flex items-center justify-center" style={{ backgroundColor: '#1a1a1a' }}>
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
@@ -52,11 +58,11 @@ export default function UploadPage() {
             <div className="w-full max-w-7xl mx-auto h-[500px] overflow-hidden">
               <ChartRenderer />
             </div>
-          ) : (
-            // Show upload area with white outline when no data OR chart not initialized
-            <div className="border-2 border-white rounded-3xl p-8 min-h-[500px] relative" style={{ backgroundColor: '#1a1a1a' }}>
-              <DropUpload />
-            </div>
+                      ) : (
+              // Show upload area with white outline when no data OR chart not initialized
+              <div className="border-2 border-white rounded-3xl p-8 min-h-[500px] relative max-w-2xl mx-auto" style={{ backgroundColor: '#1a1a1a' }}>
+                <DropUpload />
+              </div>
           )}
           
           {/* Chat box - only show after chart is generated */}
@@ -66,7 +72,7 @@ export default function UploadPage() {
             </div>
           )}
           
-          {/* Undo and Save buttons - only show after chart is generated */}
+          {/* Action buttons - only show after chart is generated */}
           {csvData && csvData.length > 0 && chartInitialized && (
             <div className="mt-6 w-full max-w-2xl mx-auto flex items-center justify-center gap-4">
               <Button
@@ -81,20 +87,25 @@ export default function UploadPage() {
                 Undo
               </Button>
               
+
+              
               <Button
-                onClick={saveChart}
+                onClick={resetChart}
                 className="h-10 px-4 text-white flex items-center gap-2"
                 style={{ backgroundColor: '#3b82f6' }}
                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#3b82f6'}
               >
-                <Bookmark className="h-4 w-4" />
-                Save to Library
+                <Plus className="h-4 w-4" />
+                New Chart
               </Button>
+              
+
             </div>
           )}
         </div>
       </div>
+      
     </div>
   );
 } 
