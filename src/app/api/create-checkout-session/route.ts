@@ -4,12 +4,13 @@ import { createServerSupabaseClient } from '@/lib/supabase';
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('Environment variables check:', {
-      hasStripePriceId: !!process.env.STRIPE_PRICE_ID,
-      hasStripeSecretKey: !!process.env.STRIPE_SECRET_KEY,
-      hasStripePublishableKey: !!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
-      hasSupabaseServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
-    });
+    // Check if all required environment variables are present
+    if (!process.env.STRIPE_PRICE_ID || !process.env.STRIPE_SECRET_KEY || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      return NextResponse.json({ 
+        error: 'Server configuration error', 
+        details: 'Missing required environment variables' 
+      }, { status: 500 });
+    }
     
     const { userId } = await request.json();
 
@@ -18,17 +19,42 @@ export async function POST(request: NextRequest) {
     }
 
     // Get user from Supabase
-    const { data: user, error: userError } = await createServerSupabaseClient().auth.admin.getUserById(userId);
+    let supabaseClient;
+    try {
+      supabaseClient = createServerSupabaseClient();
+    } catch (error) {
+      return NextResponse.json({ 
+        error: 'Database connection error', 
+        details: 'Failed to connect to database' 
+      }, { status: 500 });
+    }
     
-    if (userError || !user.user) {
+    const { data: user, error: userError } = await supabaseClient.auth.admin.getUserById(userId);
+    
+    if (userError) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+    
+    if (!user.user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    // Initialize Stripe client early
+    let stripeClient;
+    try {
+      stripeClient = stripe();
+    } catch (error) {
+      return NextResponse.json({ 
+        error: 'Payment system error', 
+        details: 'Failed to initialize payment system' 
+      }, { status: 500 });
     }
 
     // Create or get Stripe customer
     let customerId: string;
     
     // Check if user already has a Stripe customer ID
-    const { data: subscription, error: subscriptionError } = await createServerSupabaseClient()
+    const { data: subscription, error: subscriptionError } = await supabaseClient
       .from('user_subscriptions')
       .select('stripe_customer_id')
       .eq('user_id', userId)
@@ -36,8 +62,7 @@ export async function POST(request: NextRequest) {
 
     // If table doesn't exist, just create the Stripe customer without storing it
     if (subscriptionError && subscriptionError.code === 'PGRST116') {
-      console.warn('user_subscriptions table does not exist, creating Stripe customer without storage');
-      const customer = await stripe().customers.create({
+      const customer = await stripeClient.customers.create({
         email: user.user.email!,
         metadata: {
           supabase_user_id: userId,
@@ -45,13 +70,12 @@ export async function POST(request: NextRequest) {
       });
       customerId = customer.id;
     } else if (subscriptionError) {
-      console.error('Error fetching subscription:', subscriptionError);
       return NextResponse.json({ error: 'Database error' }, { status: 500 });
     } else if (subscription?.stripe_customer_id) {
       customerId = subscription.stripe_customer_id;
     } else {
       // Create new Stripe customer
-      const customer = await stripe().customers.create({
+      const customer = await stripeClient.customers.create({
         email: user.user.email!,
         metadata: {
           supabase_user_id: userId,
@@ -71,18 +95,16 @@ export async function POST(request: NextRequest) {
         });
 
       if (upsertError) {
-        console.warn('Could not store subscription in database, but continuing with Stripe checkout:', upsertError);
       }
     }
 
     // Check if STRIPE_PRICE_ID is configured
     if (!process.env.STRIPE_PRICE_ID) {
-      console.error('STRIPE_PRICE_ID environment variable is not set');
       return NextResponse.json({ error: 'Stripe price ID not configured' }, { status: 500 });
     }
 
     // Create checkout session
-    const session = await stripe().checkout.sessions.create({
+    const session = await stripeClient.checkout.sessions.create({
       customer: customerId,
       payment_method_types: ['card'],
       line_items: [
@@ -101,9 +123,22 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ sessionId: session.id });
   } catch (error) {
-    console.error('Error creating checkout session:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const isStripeError = errorMessage.includes('Stripe') || errorMessage.includes('stripe');
+    const isSupabaseError = errorMessage.includes('Supabase') || errorMessage.includes('supabase');
+    
+    let userMessage = 'Internal server error';
+    if (isStripeError) {
+      userMessage = 'Payment system error';
+    } else if (isSupabaseError) {
+      userMessage = 'Database error';
+    }
+    
     return NextResponse.json(
-      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
+      { 
+        error: userMessage, 
+        details: errorMessage
+      },
       { status: 500 }
     );
   }

@@ -10,13 +10,20 @@ import { getStripe } from '@/lib/stripe';
 
 export default function UpgradePrompt() {
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const router = useRouter();
   const { user } = useAuth();
 
   const handleUpgrade = async () => {
-    if (!user) return;
+    if (!user) {
+      console.error('No user found for upgrade');
+      setError('User not found. Please try signing in again.');
+      return;
+    }
     
     setLoading(true);
+    setError('');
+    
     try {
       const response = await fetch('/api/create-checkout-session', {
         method: 'POST',
@@ -26,19 +33,36 @@ export default function UpgradePrompt() {
         body: JSON.stringify({ userId: user.id }),
       });
 
-      const { sessionId, error } = await response.json();
-      
-      if (error) {
-        console.error('Error creating checkout session:', error);
+      if (!response.ok) {
+        const errorText = await response.text();
+        setError('Failed to create checkout session. Please try again.');
         return;
       }
 
+      const { sessionId, error } = await response.json();
+      
+      if (error) {
+        setError('Failed to create checkout session. Please try again.');
+        return;
+      }
+
+      if (!sessionId) {
+        setError('Failed to create checkout session. Please try again.');
+        return;
+      }
+      
       const stripe = await getStripe();
       if (stripe) {
-        await stripe.redirectToCheckout({ sessionId });
+        const { error: redirectError } = await stripe.redirectToCheckout({ sessionId });
+        
+        if (redirectError) {
+          setError('Failed to redirect to payment page. Please try again.');
+        }
+      } else {
+        setError('Payment system not available. Please try again later.');
       }
     } catch (error) {
-      console.error('Error during upgrade:', error);
+      setError('An unexpected error occurred. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -137,8 +161,11 @@ export default function UpgradePrompt() {
             </Button>
           </div>
 
-          <p className="text-gray-500 text-sm mt-6" style={{ fontFamily: 'Helvetica, Arial, sans-serif', fontWeight: 400 }}>
-          </p>
+          {error && (
+            <div className="mt-4 p-3 text-sm text-red-400 bg-red-900/20 border border-red-500 rounded-md">
+              {error}
+            </div>
+          )}
         </div>
       </div>
     </div>
