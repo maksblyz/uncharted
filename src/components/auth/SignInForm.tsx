@@ -9,6 +9,7 @@ export default function SignInForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState('');
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -46,8 +47,10 @@ export default function SignInForm() {
     }
   };
 
-  const handleGoogleSignIn = async () => {
-    setLoading(true);
+  const handleGoogleSignIn = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setGoogleLoading(true);
     setError('');
     
     try {
@@ -70,7 +73,7 @@ export default function SignInForm() {
       console.error('Unexpected error during Google sign in:', err);
       setError('An unexpected error occurred. Please try again.');
     } finally {
-      setLoading(false);
+      setGoogleLoading(false);
     }
   };
 
@@ -105,7 +108,7 @@ export default function SignInForm() {
           type="submit"
           className="w-full h-12 text-base bg-white text-black hover:bg-gray-100"
           style={{ fontFamily: 'Helvetica, Arial, sans-serif', fontWeight: 400 }}
-          disabled={loading}
+          disabled={loading || googleLoading}
         >
           {loading ? 'Signing In...' : 'Sign In'}
         </Button>
@@ -123,8 +126,9 @@ export default function SignInForm() {
 
         <div className="mt-6">
           <button
+            type="button"
             onClick={handleGoogleSignIn}
-            disabled={loading}
+            disabled={googleLoading || loading}
             className="w-full h-12 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed rounded-md border border-gray-300 flex items-center justify-center font-medium text-sm"
             style={{ fontFamily: 'Roboto, Arial, sans-serif' }}
           >
@@ -134,7 +138,7 @@ export default function SignInForm() {
               <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
               <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
             </svg>
-            {loading ? 'Signing in...' : 'Continue with Google'}
+            {googleLoading ? 'Signing in...' : 'Continue with Google'}
           </button>
         </div>
       </div>

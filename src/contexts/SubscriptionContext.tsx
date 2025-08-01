@@ -4,6 +4,13 @@ import { createContext, useContext, useEffect, useState, useCallback } from 'rea
 import { useAuth } from './AuthContext';
 import { supabase } from '@/lib/supabase';
 
+// Ensure crypto.randomUUID is available
+declare global {
+  interface Crypto {
+    randomUUID(): string;
+  }
+}
+
 interface UserSubscription {
   id: string;
   user_id: string;
@@ -98,10 +105,14 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
         // Create new subscription for user
         console.log('Creating new subscription for user:', user.id);
         
+        // Generate a unique ID for the subscription
+        const subscriptionId = crypto.randomUUID();
+        
         // Try to insert the subscription directly (upsert approach)
         const { data: newSubscription, error: createError } = await supabaseClient
           .from('user_subscriptions')
           .upsert({
+            id: subscriptionId,
             user_id: user.id,
             upload_count: 0,
             is_premium: false,
@@ -124,9 +135,11 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
           
           // If upsert fails, try a simple insert
           console.log('Trying simple insert as fallback...');
+          const fallbackSubscriptionId = crypto.randomUUID();
           const { data: fallbackSubscription, error: fallbackError } = await supabaseClient
             .from('user_subscriptions')
             .insert({
+              id: fallbackSubscriptionId,
               user_id: user.id,
               upload_count: 0,
               is_premium: false,

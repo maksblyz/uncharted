@@ -83,7 +83,6 @@ export default function SettingsPage() {
           <ArrowLeft className="h-4 w-4" />
           Back
         </Button>
-        <h1 className="text-2xl font-bold text-white">Settings</h1>
         <div className="w-10"></div> {/* Spacer for centering */}
       </div>
 
@@ -220,30 +219,7 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          {/* Data Management */}
-          <div className="border-2 border-white rounded-3xl p-8 mb-6" style={{ backgroundColor: '#1a1a1a' }}>
-            <h2 className="text-xl font-bold text-white mb-6">Data Management</h2>
-            <p className="text-gray-400 mb-6">Manage your charts and data</p>
-            
-            <div className="space-y-4">
-              <Button 
-                className="w-full h-10 px-4 text-white flex items-center justify-start gap-2"
-                style={{ backgroundColor: '#444444' }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#555555'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#444444'}
-              >
-                Export All Data
-              </Button>
-              <Button 
-                className="w-full h-10 px-4 text-white flex items-center justify-start gap-2"
-                style={{ backgroundColor: '#444444' }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#555555'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#444444'}
-              >
-                Delete All Charts
-              </Button>
-            </div>
-          </div>
+
 
           {/* Logout */}
           <div className="border-2 border-white rounded-3xl p-8" style={{ backgroundColor: '#1a1a1a' }}>

@@ -91,7 +91,7 @@ export default function PremiumUpgrade({ onSkip, onUpgrade }: PremiumUpgradeProp
           <Button
             onClick={handleUpgrade}
             disabled={loading}
-            className="w-full h-12 bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600"
+            className="w-full h-12 bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 text-sm"
             style={{ fontFamily: 'Helvetica, Arial, sans-serif', fontWeight: 400 }}
           >
             {loading ? 'Processing...' : 'Upgrade to Premium'}
@@ -100,7 +100,7 @@ export default function PremiumUpgrade({ onSkip, onUpgrade }: PremiumUpgradeProp
           <Button
             onClick={onSkip}
             variant="ghost"
-            className="w-full h-12 text-gray-400 hover:text-white"
+            className="w-full h-12 text-gray-400 hover:text-white text-sm"
             style={{ fontFamily: 'Helvetica, Arial, sans-serif', fontWeight: 400 }}
           >
             Start with Free Plan
