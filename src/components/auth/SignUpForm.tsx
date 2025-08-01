@@ -70,7 +70,11 @@ export default function SignUpForm() {
       const { error } = await supabase().auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/signup-redirect`
+          redirectTo: `${window.location.origin}/auth/signup-redirect`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          }
         }
       });
       
