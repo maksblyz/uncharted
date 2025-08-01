@@ -166,6 +166,18 @@ export default function UpgradePrompt() {
               {error}
             </div>
           )}
+
+          {/* Manual refresh button for after payment */}
+          <div className="mt-4 text-center">
+            <Button
+              onClick={() => window.location.reload()}
+              variant="ghost"
+              className="text-gray-400 hover:text-white text-sm"
+              style={{ fontFamily: 'Helvetica, Arial, sans-serif', fontWeight: 400 }}
+            >
+              Already paid? Click here to refresh
+            </Button>
+          </div>
         </div>
       </div>
     </div>

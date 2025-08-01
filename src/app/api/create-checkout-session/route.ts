@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
         },
       ],
       mode: 'subscription',
-      success_url: `${request.headers.get('origin')}/upload?success=true`,
+      success_url: `${request.headers.get('origin')}/upload?success=true&refresh=true&upgraded=true`,
       cancel_url: `${request.headers.get('origin')}/upload?canceled=true`,
       metadata: {
         userId,

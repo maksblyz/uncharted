@@ -16,6 +16,7 @@ export default function SettingsPage() {
   const [editName, setEditName] = useState(user?.user_metadata?.name || "");
   const [editEmail, setEditEmail] = useState(user?.email || "");
   const [upgradeLoading, setUpgradeLoading] = useState(false);
+  const [billingLoading, setBillingLoading] = useState(false);
 
   const handleBack = () => {
     router.push("/upload");
@@ -66,6 +67,36 @@ export default function SettingsPage() {
       console.error('Error during upgrade:', error);
     } finally {
       setUpgradeLoading(false);
+    }
+  };
+
+  const handleBilling = async () => {
+    if (!user) return;
+    
+    setBillingLoading(true);
+    try {
+      const response = await fetch('/api/create-portal-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId: user.id }),
+      });
+
+      const { url, error } = await response.json();
+      
+      if (error) {
+        console.error('Error creating portal session:', error);
+        return;
+      }
+
+      if (url) {
+        window.location.href = url;
+      }
+    } catch (error) {
+      console.error('Error during billing setup:', error);
+    } finally {
+      setBillingLoading(false);
     }
   };
 
@@ -195,7 +226,7 @@ export default function SettingsPage() {
             <h2 className="text-xl font-bold text-white mb-6">Subscription</h2>
             <p className="text-gray-400 mb-6">Manage your subscription and billing</p>
             
-            <div className="flex items-center justify-between p-4 bg-gray-800 rounded-lg">
+            <div className="flex items-center justify-between p-4 bg-gray-800 rounded-lg mb-4">
               <div>
                 <h3 className="text-lg font-semibold text-white">
                   {isPremium ? 'Premium Plan' : 'Free Plan'}
@@ -217,6 +248,19 @@ export default function SettingsPage() {
                 </Button>
               )}
             </div>
+            
+            {isPremium && (
+              <Button
+                onClick={handleBilling}
+                disabled={billingLoading}
+                className="w-full h-10 px-4 text-white flex items-center justify-center gap-2"
+                style={{ backgroundColor: billingLoading ? '#1e40af' : '#3b82f6' }}
+                onMouseEnter={(e) => !billingLoading && (e.currentTarget.style.backgroundColor = '#2563eb')}
+                onMouseLeave={(e) => !billingLoading && (e.currentTarget.style.backgroundColor = '#3b82f6')}
+              >
+                {billingLoading ? 'Loading...' : 'Manage Billing'}
+              </Button>
+            )}
           </div>
 
 
