@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
-import { createClient } from '@/lib/supabase';
+import { createServerSupabaseClient } from '@/lib/supabase';
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get user's Stripe customer ID from database
-    const supabase = createClient();
+    const supabase = createServerSupabaseClient();
     const { data: subscription, error: subError } = await supabase
       .from('user_subscriptions')
       .select('stripe_customer_id')

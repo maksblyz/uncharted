@@ -235,6 +235,7 @@ function analyzeDataStructure(data: Record<string, unknown>[]) {
 }
 
 // Apply automatic spacing fixes based on data analysis
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function applyAutomaticSpacingFixes(config: any, dataAnalysis: any) {
     const spacingIssues = dataAnalysis.spacingIssues;
     if (!spacingIssues) return config;

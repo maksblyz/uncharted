@@ -18,11 +18,10 @@ import { useSearchParams } from "next/navigation";
 // Wrap your component logic in a new component to use Suspense
 function UploadPageContent() {
   const { csvData, chartInitialized, canUndo, undo, loadChart, isLoading, resetChart } = useChartStore();
-  const { isPremium, checkUploadLimit, loading: subLoading, uploadCount, subscription, refreshSubscription } = useSubscription();
+  const { isPremium, checkUploadLimit, loading: subLoading, refreshSubscription } = useSubscription();
   const searchParams = useSearchParams();
   
   const isSuccessRedirect = searchParams.get('success') === 'true';
-  const isUpgraded = searchParams.get('upgraded') === 'true';
   const [isFinalizing, setIsFinalizing] = useState(isSuccessRedirect);
 
   // This effect will poll for the subscription update

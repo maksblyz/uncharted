@@ -34,14 +34,13 @@ export default function UpgradePrompt() {
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
         setError('Failed to create checkout session. Please try again.');
         return;
       }
 
-      const { sessionId, error } = await response.json();
+      const { sessionId } = await response.json();
       
-      if (error) {
+      if (!sessionId) {
         setError('Failed to create checkout session. Please try again.');
         return;
       }

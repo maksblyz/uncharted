@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     let supabaseClient;
     try {
       supabaseClient = createServerSupabaseClient();
-    } catch (error) {
+    } catch {
       return NextResponse.json({ 
         error: 'Database connection error', 
         details: 'Failed to connect to database' 
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     let stripeClient;
     try {
       stripeClient = stripe();
-    } catch (error) {
+    } catch {
       return NextResponse.json({ 
         error: 'Payment system error', 
         details: 'Failed to initialize payment system' 
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
       customerId = customer.id;
 
       // Try to insert or update user subscription with Stripe customer ID
-      const { error: upsertError } = await createServerSupabaseClient()
+      await createServerSupabaseClient()
         .from('user_subscriptions')
         .upsert({ 
           user_id: userId, 
@@ -93,9 +93,6 @@ export async function POST(request: NextRequest) {
         }, { 
           onConflict: 'user_id' 
         });
-
-      if (upsertError) {
-      }
     }
 
     // Check if STRIPE_PRICE_ID is configured
