@@ -212,7 +212,9 @@ You can include any of these fields:
     "shadow": boolean,
     "gradient": boolean,
     "opacity": number (0-1),
-    "colors": ["#hexcolor1", "#hexcolor2", "#hexcolor3"]
+    "colors": ["#hexcolor1", "#hexcolor2", "#hexcolor3"],
+    "borderColor": "#hexcolor",
+    "borderWidth": number (0-10)
   },
   "lineStyle": {
     "width": number (1-20),
@@ -233,7 +235,10 @@ You can include any of these fields:
     "roseType": boolean,
     "donut": boolean,
     "center": [number | string, number | string],
-    "gradient": boolean
+    "gradient": boolean,
+    "borderColor": "#hexcolor",
+    "borderWidth": number (0-10),
+    "borderRadius": number (0-50)
   },
   "backgroundColor": "#hexcolor (only use for light themes, otherwise keep default dark)",
   "borderStyle": {
@@ -414,6 +419,30 @@ Examples of tweaks:
 - "remove grid lines" → {"grid": "none"}
 - "add grid lines" → {"grid": "solid"}
 - "dashed grid" → {"grid": "dashed"}
+- "hide background lines" → {"grid": "none"}
+- "no background lines" → {"grid": "none"}
+- "remove background lines" → {"grid": "none"}
+- "get rid of background lines" → {"grid": "none"}
+- "no grid" → {"grid": "none"}
+- "add outline to bars" → {"barStyle": {"borderColor": "#ffffff", "borderWidth": 2}}
+- "bar outline" → {"barStyle": {"borderColor": "#ffffff", "borderWidth": 2}}
+- "bars with outline" → {"barStyle": {"borderColor": "#ffffff", "borderWidth": 2}}
+- "border around bars" → {"barStyle": {"borderColor": "#ffffff", "borderWidth": 2}}
+- "white outline on bars" → {"barStyle": {"borderColor": "#ffffff", "borderWidth": 2}}
+- "black outline on bars" → {"barStyle": {"borderColor": "#000000", "borderWidth": 2}}
+- "thick bar outline" → {"barStyle": {"borderColor": "#ffffff", "borderWidth": 4}}
+- "thin bar outline" → {"barStyle": {"borderColor": "#ffffff", "borderWidth": 1}}
+- "remove bar outline" → {"barStyle": {"borderWidth": 0}}
+- "no bar outline" → {"barStyle": {"borderWidth": 0}}
+- "remove pie outline" → {"pieStyle": {"borderWidth": 0}}
+- "no pie outline" → {"pieStyle": {"borderWidth": 0}}
+- "pie without outline" → {"pieStyle": {"borderWidth": 0}}
+- "get rid of pie outline" → {"pieStyle": {"borderWidth": 0}}
+- "hide pie border" → {"pieStyle": {"borderWidth": 0}}
+- "pie chart outline" → {"pieStyle": {"borderColor": "#ffffff", "borderWidth": 2}}
+- "white outline on pie" → {"pieStyle": {"borderColor": "#ffffff", "borderWidth": 2}}
+- "black outline on pie" → {"pieStyle": {"borderColor": "#000000", "borderWidth": 2}}
+- "thick pie outline" → {"pieStyle": {"borderColor": "#ffffff", "borderWidth": 4}}
 - "rotate x-axis labels" → {"axisLabels": {"xLabels": {"rotate": 45}}}
 - "group every 2 data points" → {"binning": {"enabled": true, "groupSize": 2, "method": "sum"}}
 - "bin every 3 points" → {"binning": {"enabled": true, "groupSize": 3, "method": "average"}}

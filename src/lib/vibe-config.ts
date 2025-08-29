@@ -39,7 +39,9 @@ export const VibeConfig = z.object({
     shadow: z.boolean().optional(),
     gradient: z.boolean().optional(),
     opacity: z.number().optional(),
-    colors: z.array(z.string()).optional()
+    colors: z.array(z.string()).optional(),
+    borderColor: z.string().optional(),
+    borderWidth: z.number().optional()
   }).optional(),
   lineStyle: z.object({
     width: z.number().optional(),
@@ -60,7 +62,10 @@ export const VibeConfig = z.object({
     roseType: z.boolean().optional(),
     donut: z.boolean().optional(),
     center: z.union([z.array(z.number()), z.array(z.string())]).optional(),
-    gradient: z.boolean().optional()
+    gradient: z.boolean().optional(),
+    borderColor: z.string().optional(),
+    borderWidth: z.number().optional(),
+    borderRadius: z.number().optional()
   }).optional(),
   backgroundColor: z.string().optional(),
   borderStyle: z.object({

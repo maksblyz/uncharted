@@ -101,12 +101,16 @@ function createSeries(config: VibeConfig, category?: string) {
           shadowBlur: barStyle?.shadow ? 10 : 0,
           shadowColor: barStyle?.shadow ? "rgba(0, 0, 0, 0.5)" : undefined,
           opacity: barStyle?.opacity ?? 1,
+          borderColor: barStyle?.borderColor,
+          borderWidth: barStyle?.borderWidth ?? 0,
         } : {
           color,
           borderRadius: barStyle?.borderRadius ?? 6,
           shadowBlur: barStyle?.shadow ? 10 : 0,
           shadowColor: barStyle?.shadow ? "rgba(0, 0, 0, 0.5)" : undefined,
           opacity: barStyle?.opacity ?? 1,
+          borderColor: barStyle?.borderColor,
+          borderWidth: barStyle?.borderWidth ?? 0,
         },
         ...(barStyle?.colors && {
           itemStyle: {
@@ -118,6 +122,8 @@ function createSeries(config: VibeConfig, category?: string) {
             shadowBlur: barStyle?.shadow ? 10 : 0,
             shadowColor: barStyle?.shadow ? "rgba(0, 0, 0, 0.5)" : undefined,
             opacity: barStyle?.opacity ?? 1,
+            borderColor: barStyle?.borderColor,
+            borderWidth: barStyle?.borderWidth ?? 0,
           }
         }),
         ...(barStyle?.gradient && {
@@ -135,6 +141,8 @@ function createSeries(config: VibeConfig, category?: string) {
             shadowBlur: barStyle?.shadow ? 10 : 0,
             shadowColor: barStyle?.shadow ? "rgba(0, 0, 0, 0.5)" : undefined,
             opacity: barStyle?.opacity ?? 1,
+            borderColor: barStyle?.borderColor,
+            borderWidth: barStyle?.borderWidth ?? 0,
           }
         })
       };
@@ -216,9 +224,9 @@ export function buildEchartsOption(data: Record<string, unknown>[], c: VibeConfi
         radius: c.pieStyle?.donut ? ["40%", "70%"] : c.pieStyle?.radius ? `${c.pieStyle.radius}%` : "70%",
         center: c.pieStyle?.center ? c.pieStyle.center.map(val => typeof val === 'number' ? `${val}%` : val) : ["50%", "50%"],
         itemStyle: { 
-          borderRadius: 10, 
-          borderColor: "#1a1a1a", 
-          borderWidth: 2,
+          borderRadius: c.pieStyle?.borderRadius ?? 10, 
+          borderColor: c.pieStyle?.borderColor ?? "#1a1a1a", 
+          borderWidth: c.pieStyle?.borderWidth ?? 2,
           color: c.pieStyle?.gradient ? (params: EChartsParams) => {
             const colors = c.palette || ['#7dd3fc', '#60a5fa', '#818cf8', '#c084fc', '#f472b6'];
             const baseColor = colors[params.dataIndex % colors.length];
@@ -376,6 +384,7 @@ export function buildEchartsOption(data: Record<string, unknown>[], c: VibeConfi
         } : undefined,
       },
       splitLine: { 
+        show: c.grid !== "none",
         lineStyle: { 
           color: c.themePreset === 'light' ? '#e2e8f0' : '#374151', 
           type: c.grid === "dashed" ? "dashed" : "solid" 
