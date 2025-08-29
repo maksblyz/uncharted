@@ -164,7 +164,8 @@ const useChartStore = create<Store>((set, get) => ({
   },
   autoSave: async () => {
     const currentState = get();
-    if (!currentState.csvData.length) return;
+    // Only auto-save if we have data AND the chart has been initialized
+    if (!currentState.csvData.length || !currentState.chartInitialized) return;
     
     set({ isSaving: true });
     

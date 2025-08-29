@@ -7,7 +7,7 @@ import { Upload } from "lucide-react";
 
 
 // Function to generate complete chart configuration from data
-async function generateChartFromData(data: Record<string, unknown>[]) {
+export async function generateChartFromData(data: Record<string, unknown>[], userPrompt?: string) {
     try {
         console.log('Starting LLM chart generation...');
         console.log('Data sample:', data.slice(0, 3));
@@ -16,7 +16,7 @@ async function generateChartFromData(data: Record<string, unknown>[]) {
         useChartStore.getState().setGenerating(true);
         
         // Send data to LLM for complete chart generation
-        const chartConfig = await generateCompleteChartConfig(data);
+        const chartConfig = await generateCompleteChartConfig(data, userPrompt);
         console.log('Generated complete chart config:', chartConfig);
         
         // Apply the generated configuration
@@ -36,7 +36,7 @@ async function generateChartFromData(data: Record<string, unknown>[]) {
 }
 
 // Generate complete chart configuration using LLM
-async function generateCompleteChartConfig(data: Record<string, unknown>[]) {
+async function generateCompleteChartConfig(data: Record<string, unknown>[], userPrompt?: string) {
     // Prepare a sample of the data for LLM analysis (first 50 rows to stay within context limits)
     const dataSample = data.slice(0, 50);
     const columns = Object.keys(data[0]);
@@ -46,7 +46,10 @@ async function generateCompleteChartConfig(data: Record<string, unknown>[]) {
     
     const prompt = `You are a data visualization expert. Analyze this dataset and create a complete chart configuration.
 
-DATASET:
+${userPrompt ? `USER REQUEST: "${userPrompt}"
+IMPORTANT: The user has specifically requested: "${userPrompt}". Please honor this request while ensuring the chart is appropriate for the data.
+
+` : ''}DATASET:
 ${JSON.stringify(dataSample, null, 2)}
 
 COLUMNS: ${columns.join(', ')}
@@ -54,6 +57,13 @@ COLUMNS: ${columns.join(', ')}
 DATA ANALYSIS:
 ${JSON.stringify(dataAnalysis, null, 2)}
 
+CHART TYPE SELECTION:
+${userPrompt ? `
+1. FIRST PRIORITY: Honor the user's request: "${userPrompt}"
+2. If the user specifically mentions a chart type (bar, line, pie, scatter, area), USE THAT TYPE
+3. If the user's request conflicts with data structure, explain in the title why you made adjustments
+4. Only override user preference if it would create an invalid/unreadable chart
+` : `
 CHART TYPE SELECTION RULES (FOLLOW THESE EXACTLY):
 1. If ANY column contains DATE/TIME data → USE "line" chart type
 2. If you have DATE + NUMERIC + CATEGORICAL → USE "line" chart with separate lines for each category
@@ -64,6 +74,7 @@ CHART TYPE SELECTION RULES (FOLLOW THESE EXACTLY):
 7. Use "pie" for simple categorical breakdowns (no dates)
 
 CRITICAL: Based on the data analysis above, the chart type MUST be: "${dataAnalysis.recommendedChartType}"
+`}
 
 SPACING AND LAYOUT REQUIREMENTS:
 ${dataAnalysis.spacingIssues && dataAnalysis.spacingIssues.issues.length > 0 ? 
@@ -82,9 +93,9 @@ DATA DENSITY INFO:
 - Unique categories: ${dataAnalysis.spacingIssues?.dataDensity?.uniqueCategories || 0}
 
 TASK: Create a complete chart configuration that includes:
-1. Chart type: MUST be "${dataAnalysis.recommendedChartType}" based on data analysis
+1. Chart type: ${userPrompt ? `Honor user request: "${userPrompt}" (override automatic selection if needed)` : `MUST be "${dataAnalysis.recommendedChartType}" based on data analysis`}
 2. X and Y axis selections
-3. Chart title: ALWAYS include a descriptive title that summarizes the data and chart type
+3. Chart title: ALWAYS include a descriptive title that summarizes the data and chart type${userPrompt ? ` and reflects the user's request: "${userPrompt}"` : ''}
 4. Color palette
 5. Legend configuration
 6. All styling (fonts, sizes, colors, etc.)
@@ -112,7 +123,7 @@ IMPORTANT: When you see categorical columns (like "Product" with multiple values
 - Include a legend positioned at the bottom to distinguish between the different categories
 - Use different colors for each category
 
-Return ONLY valid JSON with the complete chart configuration. The chart type MUST be "${dataAnalysis.recommendedChartType}". Include all necessary fields for a beautiful, professional chart.`;
+Return ONLY valid JSON with the complete chart configuration. ${userPrompt ? `Honor the user's request: "${userPrompt}".` : `The chart type MUST be "${dataAnalysis.recommendedChartType}".`} Include all necessary fields for a beautiful, professional chart.`;
 
     try {
         const response = await fetch('/api/vibe', {
@@ -132,15 +143,20 @@ Return ONLY valid JSON with the complete chart configuration. The chart type MUS
         
         let config = await response.json();
         
-        // Ensure the correct chart type is used
-        const dataAnalysis = analyzeDataStructure(data);
-        if (config.chartType !== dataAnalysis.recommendedChartType) {
-            console.warn(`LLM chose wrong chart type: ${config.chartType}, correcting to: ${dataAnalysis.recommendedChartType}`);
-            config.chartType = dataAnalysis.recommendedChartType;
+        // Only enforce automatic chart type selection if no user prompt was provided
+        if (!userPrompt) {
+            const dataAnalysis = analyzeDataStructure(data);
+            if (config.chartType !== dataAnalysis.recommendedChartType) {
+                console.warn(`LLM chose wrong chart type: ${config.chartType}, correcting to: ${dataAnalysis.recommendedChartType}`);
+                config.chartType = dataAnalysis.recommendedChartType;
+            }
+        } else {
+            console.log(`User requested specific chart via prompt: "${userPrompt}", allowing LLM to choose appropriate type: ${config.chartType}`);
         }
         
         // Apply automatic spacing fixes based on data analysis
-        config = applyAutomaticSpacingFixes(config, dataAnalysis);
+        const dataAnalysisForSpacing = analyzeDataStructure(data);
+        config = applyAutomaticSpacingFixes(config, dataAnalysisForSpacing);
         
         return config;
     } catch (error) {
@@ -371,25 +387,13 @@ function createFallbackConfig(data: Record<string, unknown>[]) {
     } as any;
 }
 
-export default function DropUpload() {
-    const { setCsvData, csvData, chartInitialized } = useChartStore();
-    const { checkUploadLimit, incrementUploadCount } = useSubscription();
+interface DropUploadProps {
+    onFileUploaded?: () => void;
+}
 
-    // If data is loaded but chart not initialized, show generating state
-    if (csvData && csvData.length > 0 && !chartInitialized) {
-        return (
-            <div className="absolute inset-0 flex flex-col items-center justify-center rounded-3xl">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
-                <div className="text-white text-lg mb-2">
-                    Generating
-                    <span className="animate-pulse">...</span>
-                </div>
-                <div className="text-gray-400 text-base">
-                    Creating your chart with AI
-                </div>
-            </div>
-        );
-    }
+export default function DropUpload({ onFileUploaded }: DropUploadProps) {
+    const { setCsvData, csvData } = useChartStore();
+    const { checkUploadLimit, incrementUploadCount } = useSubscription();
 
     const handleFile = async (file: File) => {
         console.log('File selected:', { name: file.name, size: file.size, type: file.type });
@@ -418,8 +422,10 @@ export default function DropUpload() {
                 // Increment upload count
                 await incrementUploadCount();
                 
-                // Trigger generative chart pipeline
-                await generateChartFromData(rows);
+                // Call callback to notify parent component
+                if (onFileUploaded) {
+                    onFileUploaded();
+                }
             },
             error: (error) => {
                 console.error("Error parsing CSV:", error);
